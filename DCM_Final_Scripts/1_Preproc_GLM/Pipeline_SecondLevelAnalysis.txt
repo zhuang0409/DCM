@@ -1,0 +1,18 @@
+Single-Case GLM Analysis pipeline: Second-level Analysis (group of subjects)
+
+1. Factorial design specification: 
+choose the one-sample T-test to extract the mean group activation for a specific contrast of interest.
+Data: select the specific contrast for all subject, to extract the mean activation of the group 
+[e.j. con_0001.img -> https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=spm;c3d56bc7.07110]
+
+From SPM blog:
+The difference between the images is that the con image gives you the p-value at each voxel, while the spmT image gives you the t-statistic at each voxel.  
+The functionality is the same as in regular null hypothesis significance testing.  The t-statistic accounts for the difference in observed Beta relative to standard error of the Betas.  The p-value tells you the statistical significance at each voxel; therefore, it accounts for the t-statistic at each voxel as well as the degrees of freedom of the data.
+P.S. when you do a second-level analysis, you should always use the con files, not the spmT's
+
+2. Model estimation: dependency with the previous SPM.mat created, to estimate the model and extract the mean activation.
+
+
+
+
+

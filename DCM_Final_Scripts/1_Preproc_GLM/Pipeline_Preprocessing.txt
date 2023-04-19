@@ -1,0 +1,84 @@
+Preprocessing pipeline: 1_preprocessing_multi-sessions.sh
+
+1. Realign: ESTIMATE AND RESLICE
+Realign is the most basic function to match images. It uses a rigid body transformation
+to manipulate the scans. This means that it allows only translations (moving the
+image in X, Y, or Z direction) and rotations (over the X, Y, and Z axis). By trial and
+error it tries to find the manipulation that minimizes the difference between two
+scans. The cost function that is minimized is the sum of squared differences
+between the two scans. As a consequence, it can only be used within modalities,
+i.e., on scans that have been acquired with the same pulse sequence. It is mostly
+used to correct for motion of the subject during the functional scans (hence the
+name realign). Realignment results in changes to the (affine) transformation that is
+incorporated into your “.nii” files. You can also “reslice” these images into new files
+containing altered (interpolated) bitmaps.
+The same realignement has been performed with all the runs together, in order to realign all the functional images
+to the first image of the first run.
+Realign: trilinear interpolation;
+Reslice: 4th Degree - Realign all images + the mean image.
+
+2. Slice Time correction: DEPENDENCTY -> REALIGNED IMAGES
+Most functional pulse sequences (like 2D EPI, as opposed to three dimensional
+pulse sequences such as 3D EPI or PRESTO) do not acquire every slice in a volume
+at the same moment. Because the time it takes to scan a volume is typically in
+the order of seconds, substantial timing differences can occur as a function of
+acquisition order of the slices within a scan. In fMRI models where timing is an
+important factor (i.e., in event related designs), this timing difference should therefore
+be taken into account. SPM solves this problem by allowing the opportunity to
+correct (i.e., equalize) the timing of your functional series.
+
+3. Coregistration: ESTIMATE
+The Coregister function is used to match scans of different modalities.
+Reference: mean image created with the realignement -> DEPENDENCY MEAN REALIGNEMENT (one mean image for all the runs together)
+Source: T1-weighted image
+
+4. Segmentation: DEPENDENCY -> COREGISTERED IMAGES (T1 modified after the coregistration)
+Segment can be used to separate tissue classes such as grey matter, white matter,
+CSF, in anatomical scans. Segmenting an anatomical scan thus results in a set of
+different images, which can be used, e.g., for varying purposes, such as volumetry
+(voxel based morphometry). Segmentation is also used for normalization.
+
+5a. Normalization for functional data: WRITE / DEPENDENCY -> SLICE TIME CORRECTED IMAGES -> one normalization for each run of the same subject
+The Normalize function is used to manipulate scans into standard stereotactic (MNI)
+space. MNI space as used in SPM12 is defined by a template that was created by
+nonlinear registration of 152 T1-weighted images.
+Normalize by using T1 image unified segmentation: structural image was coregistered to the mean functional image after the motion correction (coregistration); 
+The transformed structural image was then segmented into gray matter, white matter, cerebrospinal fluid by using a unified segmentation algorithm (segmentation). 
+The motion corrected functional volumes were spatially normalized to the MNI space using the normalization parameters estimated during unified segmentation (normalization).
+- Voxel sizes: Next, you may alter the voxel size of your new scans. By default, SPM will reslice
+your new normalized images at a voxel size of 2*2*2 mm. In some circumstances, it
+is advisable to change this setting to your original voxel size or the closest round
+number. Smaller voxels will substantially increase the size of your dataset and the
+time required for statistical calculations, but may be beneficial for smoothness estimations
+that SPM uses for multiple comparisons corrections.
+Also, make sure your voxels fit into the bounding box. For instance, 4*4*4 voxels fit
+into a -80 to 80,-112 to 76, -68 to 88] bounding box, because all these boundaries
+can be devided by four.
+
+To normalize to the MNI space, to be able to use then the output in fsleyes/fslutils, use the following bounding box:
+[-90 -126 -72; 90 90 108] -> https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind1909&L=SPM&P=R975 -> MY CHOICE
+or apply the following procedure -> https://www.researchgate.net/post/Does_SPM12_Segment_generate_output_in_MNI_space
+
+5b. Normalization for structural data: WRITE / DEPENDENCY -> SEGMENT:BIAS CORRECTED
+
+6. Smoothing: DEPENDENCY -> NORMALIZED IMAGES -> one smoothing for each run of the same subject
+The Smooth function is used as a final step in spatial pre-processing to blur the
+functional images. The reason to do this is to correct for slight remaining functional/
+anatomical differences between subjects. The trade-off, however, is that you lose
+resolution by smoothing. Thus, the amount of smoothing that you should use is
+determined partly by the question you want answered. When you are interested in
+very small structures, for instance, you should not use much smoothing.
+
+SUB01/02/03/05/06/07/08/09/11/13/14/16/24 -> 3:12
+SUB17/19/22/26/27/28/29 -> 2:11
+SUB04/10/1 -> 4:13
+SUB18 -> 2-4:12
+SUB20 -> 2:8, 10:12
+SUB21 -> 6:15
+SUB25 -> 3:8, 10:13
+SUB23 -> 2:4, 6:12
+SUB15 -> 5:14 [run08 has only 118 volumes (epi0012 in original files)];
+SUB01 -> 130 volumes in each run
+
+Subjects 22,23,24,28 -> session 2
+Subjects 25,26, 27, 29 -> session 1

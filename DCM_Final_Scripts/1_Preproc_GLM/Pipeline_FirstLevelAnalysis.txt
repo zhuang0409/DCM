@@ -1,0 +1,69 @@
+Single-Case GLM Analysis pipeline: First-level analysis -> concatenation of runs, to be able then to perform the PPI and DCM analysis that need to have only 1 run.
+
+1. fMRI model Specification: all runs of one subject (within-subject analysis)
+
+- Units for design: seconds
+
+- Interscan interval: TR (2sec)
+
+- Microtime resolution: number of time-bind per scan (leave the default value). This value can correspond to the number of slices insert in the slice-time correction, if applied. Our value= 34
+
+- Microtime onset: time of the first time-bin (don't change the default value unless you have a long TR). This value can correspong to the reference slice set in the slice-time correction. 
+In our case, it is the middle slice= 17. Our value= 17.
+
+- Multiple conditions: enter the conditions.mat file created in the folder of each subject/each run, where there are all the informations concering name, onset and durations of conditions.
+
+- Multiple regressors: load the .txt file created during the realignment (in the preprocessing) with the information concernign motion artifacts [realigment parameters].
+
+- High-pass filtering: in the original paper the threshold applied was 3cycles per run [BrainVoyager] - https://www.brainvoyager.com/ubb/Forum3/HTML/000383.html
+To calculate the corresponding cut-off frequency in Hz, you just have to multiply the number of volumes in your run with the TR (in seconds) to obtain the total run length in seconds.
+Then you divide the number of cycles through this number to obtain the frequency of the filter in Hz.
+
+TR = 2000 ms (2 secs)
+133 volumes measured
+3 cycles HP filter applied
+
+133 * 2 = 266 secs
+3/266 = 0.011 Hz
+
+From this frequency, is possible to calculate the corresponding seconds of threshold by doing:
+f = 0.011Hz
+f=1/sec
+sec=1/f -> 1/0.011 => 90sec
+
+So, the final filter applied is 90sec.
+
+- Basis functions: Canonical hemodynamic response function (HRF), combined with time and disperios derivatives. NO derivatives applied
+
+- Global normalisation: SPM can normalise fMRI data in one of two ways. These are selected using the options ‘None’ (the default) and ‘Scaling’. Chosen: NONE
+
+- Explicit mask: use the segmentation of structural images to specify the within-brain mask or don't use any mask.NO mask applied
+
+- Serial correlations: Serial correlations in fMRI time series due to aliased biorhythms and unmodelled neuronal activity
+can be accounted for using an autoregressive AR(1) model during Classical (ReML) parameter
+estimation. This estimate assumes the same correlation structure for each voxel, within each session.
+ReML estimates are then used to correct for non-sphericity during inference by adjusting the
+statistics and degrees of freedom appropriately. The discrepancy between estimated and actual
+correlations are greatest at low frequencies. Therefore specification of the high-pass filter is
+particularly important.
+Serial correlation can be ignored if you choose the “none” option. Note that the above options
+only apply if you later specify that your model will be estimated using the Classical (ReML) ap-
+proach. If you choose Bayesian estimation these options will be ignored. For Bayesian estimation,
+the choice of noise model (AR model order) is made under the estimation options.  Chosen: AR(1)
+
+2. fMRI nodel estimation: estimate the SPM.mat from the model previously specified.
+
+3. Contrasts manager: creation of the contrast including all runs for each participant.
+List of conditions:
+Action A: cutting / Action B: peeling
+Object A: apple / Object B: potato
+Task A: action task / Task B: object task
+
+- All conditions (T and F maps): all conditions vs baseline
+- Task-based contrasts: action (TaskA) and object (Task B) tasks vs baseline -> 11110000000000; 00001111000000
+- Action-based contrasts: cutting (Action A) and peeling (Action B) actions vs baseline
+- Object-based contrasts: apple (Object A) and potato (Object B) objects vs baseline
+
+
+
+

@@ -1,0 +1,47 @@
+Pipeline for the extraction of group peaks:
+
+1. Create the anatomical masks from fsleyes and binarize them.
+- Split the masks in left and right hemisphere
+
+Left hemisphere: fslmaths ACROB_ROIs/IFG_bin.nii -roi 45 91 0 -1 0 -1 0 -1 IFG_bin_Left.nii
+Right hemisphere: fslmaths ACROB_ROIs/IFG_bin.nii -roi 0 45 0 -1 0 -1 0 -1 IFG_bin_Right.nii
+
+- Threshold and binarize all masks (50% - bin -> fslmaths).
+
+2. Run 'PPI/1_thr_extract_peaks_groups_concatenate_MNI.sh'
+- threshold of the group activation;
+- extract the thresholded activation within the anatomical masks;
+- extract main peak of activation within each mask -> txt file with all the peaks in voxel space.
+- convert the peaks from voxel to MNI space
+
+3. Once I have the peaks in the MNI space, use marsbar to create the ROI of the group, creating a sphere of 12mm (radius) around the main peak of the activation:
+Marsbar -> Build ROI -> Export ROI (to create an image)
+
+4. Run 'PPI/3_extract_individual_peaks_concatenate.sh' to extract the individual main peaks of activation within the group ROIs.
+
+- Copy the main peaks of activation (MNI space) of each subject in the same folder and create text files summarizing all the measures.
+In this way, I can create the node file to load the individual peaks on the brain surface using BrainNet.
+
+
+5. PPI analysis: Concatenate
+
+SPM requires you to save VOI's from each session in your design. Thus you have to select the SPM.mat file 6 times in order to save 6 VOI_#.mat files as you have done (6 ROIs)
+
+The PPI machinery then requires you to run the PPI algorithm 6 times. Each time you will select one of the VOI_# files and it will save a PPI_# file. Once you have done this you can setup your PPI design. You will need to load each of the PPI files into the matlab workspace, for example.
+
+PPI1 = load('PPI_1.mat');
+PPI2 = load('PPI_2.mat');
+.... etc.
+
+Choose a multiple regression fMRI design. You will have 18 user defined variables if you set this up as separate sessions. The covariates for each session will be PPI.Y, PPI.P, PPI.ppi x 6 sessions = 18
+
+So for the first few variables the columns of your design will be
+
+PPI1.PPI.Y  PPI1.PPI.P  PPI1.PPI.ppi  PPI2.PPI.Y  PPI2.PPI.P  PPI2.PPI.ppi ... etc.
+
+The ppi inferences will be based on the ppi colums,   [0 0 1 0 0 1 .... ]
+
+5.1 -> PPI/4_extract_VOI_create_PPI_concatenate.sh: extract VOI adjusting or not for the effects of interest (F-contrast) and create the PPI variable -> PPI.ppi / PPI.Y / PPI.P, for the Action and Object Task.
+
+7.2 -> PPI/5a-5b -> PPI analysis for Task A and Task B.
+

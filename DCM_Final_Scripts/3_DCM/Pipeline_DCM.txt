@@ -1,0 +1,36 @@
+Pipeline DCM analysis:
+
+1. DCM/1_GLM_DCM.sh:
+Run the GLM analysis, adapted for the DCM
+(one column for the driving input and one column for the modulatory effect of the task -> matrix B)
+
+2. DCM/create_VOI_DCM.sh
+Create the volume of interest for each region and extract the time-course from each region on interest, while adjusting for the F-contrast.
+Output: VOI_ROI.mat -> Y with the timecourse of the region.
+
+3. DCM/3_DCM_Left or Right:
+run the DCM models for each participants, to estimate the parameters of matrices A, B and C
+
+adapt the options:
+DCM.options.nonlinear  = 0; -> this would add a D matrix
+
+DCM.options.two_state  = 1; -> calculate how the strength of connections change as a function of the modulation (allows for both excitatory and inhibitory connectivity)
+
+DCM.options.stochastic = 0; -> extended model which enables endogenous noise in the brain to drive the  dynamics
+
+DCM.options.centre = 0; -> centered the input into the noise; if = 1 this changes the interpretation of the a-matrix. Rather than being the baseline in the absence of input, it becomes the average connectivity across inputs [explanation in https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=spm;b9abdfc2.1508]
+
+DCM.options.maxnodes = DCM.n; 
+DCM.options.analysis = 0;
+DCM.options.nograph = 1;
+
+
+4. Run DCM/4_model_space_analysis.m
+to calculate the model_space.mat that you will need to run the BMS 
+
+5. Use SPM Batch to perform the family inference and the BMS and BMA, for the group.
+
+6. DCM/7_Wilcoxon_DCM.m
+to extract all the matrices (A and B) for all subjects and to perform the statistical analysis using the T-test or the Wilcoxon Test.
+
+
